@@ -10,14 +10,13 @@ import {
   X,
   Bell,
   Search,
-  Settings,
-  LogOut
+  Settings
 } from 'lucide-react';
-import Dashboard from './components/Dashboard';
-import ExtinguisherList from './components/ExtinguisherList';
-import InspectionPanel from './components/InspectionPanel';
-import HistoryView from './components/HistoryView';
-import { AppState, FireExtinguisher, ExtinguisherStatus } from './types';
+import Dashboard from './components/Dashboard.tsx';
+import ExtinguisherList from './components/ExtinguisherList.tsx';
+import InspectionPanel from './components/InspectionPanel.tsx';
+import HistoryView from './components/HistoryView.tsx';
+import { AppState, FireExtinguisher, ExtinguisherStatus } from './types.ts';
 
 const INITIAL_DATA: FireExtinguisher[] = [
   {

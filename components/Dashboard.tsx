@@ -12,7 +12,7 @@ import {
   ChevronRight
 } from 'lucide-react';
 import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip } from 'recharts';
-import { AppState, ExtinguisherStatus } from '../types';
+import { AppState, ExtinguisherStatus } from '../types.ts';
 
 interface DashboardProps {
   state: AppState;
@@ -57,7 +57,6 @@ const Dashboard: React.FC<DashboardProps> = ({ state }) => {
         </div>
       </div>
 
-      {/* Interactive Summary Cards */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6 relative z-20">
         <StatCard 
           icon={<Package className="text-blue-600" />} 
@@ -118,7 +117,7 @@ const Dashboard: React.FC<DashboardProps> = ({ state }) => {
               <ProgressItem label="รอดำเนินการ" value={stats.pending} total={stats.total} color="bg-rose-500" />
               <div className="pt-4 p-5 bg-slate-50 rounded-2xl border border-slate-100">
                 <p className="text-xs text-slate-500 leading-relaxed font-medium">
-                  <strong>หมายเหตุ:</strong> การตรวจสอบรายเดือนต้องเสร็จสิ้นภายในวันที่ 25 ของทุกเดือน เพื่อรักษามาตรฐานความปลอดภัยสูงสุด
+                  <strong>หมายเหตุ:</strong> การตรวจสอบรายเดือนต้องเสร็จสิ้นภายในวันที่ 25 ของทุกเดือน
                 </p>
               </div>
             </div>
@@ -130,11 +129,8 @@ const Dashboard: React.FC<DashboardProps> = ({ state }) => {
             <div className="absolute -right-6 -top-6 w-32 h-32 bg-white/10 rounded-full blur-2xl group-hover:scale-150 transition-transform duration-700"></div>
             <ShieldCheck size={40} className="mb-6 opacity-80" />
             <h4 className="text-lg font-bold mb-2">Safety Score</h4>
-            <p className="text-green-100 text-sm font-medium mb-6">ระดับความปลอดภัยโดยรวมขององค์กร</p>
+            <p className="text-green-100 text-sm font-medium mb-6">ระดับความปลอดภัยโดยรวม</p>
             <div className="text-5xl font-black mb-4 tracking-tighter">Excellent</div>
-            <p className="text-green-50/70 text-xs font-medium leading-relaxed">
-              ระบบกำลังปกป้องอาคารของคุณด้วยถังดับเพลิงที่พร้อมใช้งาน 100%
-            </p>
           </div>
           
           <div className="bg-white p-8 rounded-[2.5rem] border border-slate-100 shadow-lg shadow-slate-200/40">
@@ -142,19 +138,13 @@ const Dashboard: React.FC<DashboardProps> = ({ state }) => {
               <h4 className="font-bold text-slate-900 flex items-center gap-2">
                 <ArrowUpRight size={18} className="text-[#1B7F43]" /> สถานะล่าสุด
               </h4>
-              <button 
-                onClick={() => navigate('/history')}
-                className="text-[10px] font-black uppercase text-[#1B7F43] hover:underline cursor-pointer"
-              >
-                ดูทั้งหมด
-              </button>
             </div>
             <div className="space-y-2">
               {state.extinguishers.slice(0, 5).map(e => (
                 <button 
                   key={e.id} 
                   onClick={() => handleStatusClick(e.code)}
-                  className="w-full flex items-center justify-between p-4 bg-slate-50 hover:bg-green-50 rounded-2xl transition-all border border-transparent hover:border-green-100 group cursor-pointer"
+                  className="w-full flex items-center justify-between p-4 bg-slate-50 hover:bg-green-50 rounded-2xl transition-all border border-transparent hover:border-green-100 group"
                 >
                   <div className="flex items-center gap-3">
                     <div className={`w-2 h-2 rounded-full ${e.lastInspectionDate && new Date(e.lastInspectionDate).getMonth() === currentMonth ? 'bg-green-500' : 'bg-rose-500'}`}></div>
@@ -163,12 +153,9 @@ const Dashboard: React.FC<DashboardProps> = ({ state }) => {
                       <p className="text-[10px] text-slate-400 font-medium truncate max-w-[120px]">{e.location}</p>
                     </div>
                   </div>
-                  <ChevronRight size={16} className="text-slate-300 group-hover:text-[#1B7F43] group-hover:translate-x-1 transition-all" />
+                  <ChevronRight size={16} className="text-slate-300 group-hover:text-[#1B7F43]" />
                 </button>
               ))}
-              {state.extinguishers.length === 0 && (
-                <p className="text-center text-xs text-slate-400 py-4 italic">ไม่มีข้อมูลล่าสุด</p>
-              )}
             </div>
           </div>
         </div>
@@ -180,11 +167,9 @@ const Dashboard: React.FC<DashboardProps> = ({ state }) => {
 const StatCard = ({ icon, title, value, subtitle, bg, onClick }: any) => (
   <button 
     onClick={onClick}
-    type="button"
-    className="w-full text-left bg-white p-8 rounded-[2.5rem] border border-slate-100 shadow-xl shadow-slate-200/40 hover:scale-[1.02] hover:shadow-2xl hover:border-slate-200 transition-all group active:scale-95 cursor-pointer appearance-none relative z-10 block"
+    className="w-full text-left bg-white p-8 rounded-[2.5rem] border border-slate-100 shadow-xl hover:scale-[1.02] transition-all group active:scale-95"
   >
     <div className={`w-14 h-14 rounded-2xl ${bg} flex items-center justify-center mb-6 shadow-inner transition-transform group-hover:rotate-6`}>
-      {/* Fix: Explicitly cast icon as React.ReactElement<any> to resolve type inference issue with cloneElement props */}
       {React.cloneElement(icon as React.ReactElement<any>, { size: 28 })}
     </div>
     <p className="text-slate-400 text-xs font-bold uppercase tracking-widest mb-1">{title}</p>
@@ -192,7 +177,6 @@ const StatCard = ({ icon, title, value, subtitle, bg, onClick }: any) => (
     <p className="text-[11px] text-[#1B7F43] font-bold mt-4 flex items-center gap-1.5 opacity-0 group-hover:opacity-100 transition-opacity">
        {subtitle} <ArrowUpRight size={14} />
     </p>
-    <div className="mt-4 h-1 w-0 bg-[#1B7F43] rounded-full group-hover:w-full transition-all duration-300"></div>
   </button>
 );
 
@@ -204,8 +188,8 @@ const ProgressItem = ({ label, value, total, color }: any) => {
         <span>{label}</span>
         <span className="text-slate-900">{value} / {total}</span>
       </div>
-      <div className="h-3 w-full bg-slate-100 rounded-full overflow-hidden border border-slate-50">
-        <div className={`h-full ${color} rounded-full transition-all duration-1000 ease-out shadow-sm`} style={{ width: `${percentage}%` }} />
+      <div className="h-3 w-full bg-slate-100 rounded-full overflow-hidden">
+        <div className={`h-full ${color} rounded-full transition-all duration-1000`} style={{ width: `${percentage}%` }} />
       </div>
     </div>
   );
