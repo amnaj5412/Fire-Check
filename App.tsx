@@ -8,7 +8,10 @@ import {
   History, 
   Menu, 
   X,
-  Bell
+  Bell,
+  Search,
+  Settings,
+  LogOut
 } from 'lucide-react';
 import Dashboard from './components/Dashboard';
 import ExtinguisherList from './components/ExtinguisherList';
@@ -25,7 +28,7 @@ const INITIAL_DATA: FireExtinguisher[] = [
     department: 'ธุรการ',
     weight: '15 lbs',
     status: ExtinguisherStatus.ACTIVE,
-    addedDate: new Date().toISOString().split('T')[0],
+    addedDate: '2024-01-10',
     inspections: []
   },
   {
@@ -36,21 +39,21 @@ const INITIAL_DATA: FireExtinguisher[] = [
     department: 'ไอที',
     weight: '10 lbs',
     status: ExtinguisherStatus.ACTIVE,
-    addedDate: new Date().toISOString().split('T')[0],
+    addedDate: '2024-01-12',
     inspections: []
   }
 ];
 
 const App: React.FC = () => {
   const [state, setState] = useState<AppState>(() => {
-    const saved = localStorage.getItem('fire_check_data');
+    const saved = localStorage.getItem('fire_check_data_modern');
     return saved ? JSON.parse(saved) : { extinguishers: INITIAL_DATA };
   });
 
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
 
   useEffect(() => {
-    localStorage.setItem('fire_check_data', JSON.stringify(state));
+    localStorage.setItem('fire_check_data_modern', JSON.stringify(state));
   }, [state]);
 
   const updateExtinguishers = (newExtinguishers: FireExtinguisher[]) => {
@@ -63,49 +66,42 @@ const App: React.FC = () => {
         {/* Mobile Sidebar Overlay */}
         {isSidebarOpen && (
           <div 
-            className="fixed inset-0 z-40 bg-slate-900/60 backdrop-blur-sm lg:hidden" 
+            className="fixed inset-0 z-40 bg-slate-900/40 backdrop-blur-sm lg:hidden" 
             onClick={() => setIsSidebarOpen(false)}
           />
         )}
 
         {/* Sidebar */}
         <aside className={`
-          fixed inset-y-0 left-0 z-50 w-72 bg-slate-900 text-white transition-transform duration-300 ease-in-out lg:static lg:translate-x-0
+          fixed inset-y-0 left-0 z-50 w-72 bg-white border-r border-slate-200 transition-transform duration-300 ease-in-out lg:static lg:translate-x-0
           ${isSidebarOpen ? 'translate-x-0' : '-translate-x-full'}
         `}>
           <div className="flex flex-col h-full">
             <div className="p-8">
-              <div className="flex items-center gap-4 mb-8">
-                <div className="bg-white p-1 rounded-xl shadow-xl shadow-black/20 w-14 h-14 flex items-center justify-center overflow-hidden shrink-0">
-                  <img 
-                    src="./logo.jpg" 
-                    alt="Logo" 
-                    className="w-full h-full object-cover"
-                    onError={(e) => {
-                      (e.target as HTMLImageElement).src = 'https://ui-avatars.com/api/?name=FC&background=1B7F43&color=fff&size=128';
-                    }}
-                  />
+              <div className="flex items-center gap-3 mb-10">
+                <div className="bg-[#1B7F43] p-2 rounded-2xl shadow-lg shadow-green-900/20">
+                  <ShieldCheck size={28} className="text-white" />
                 </div>
                 <div>
-                  <h1 className="text-xl font-bold tracking-tight text-white leading-tight">Fire Check</h1>
-                  <p className="text-[10px] text-slate-400 uppercase tracking-widest font-semibold">Security System</p>
+                  <h1 className="text-xl font-bold tracking-tight text-slate-900 leading-tight">FireCheck</h1>
+                  <p className="text-[10px] text-slate-400 uppercase tracking-widest font-bold">Pro Edition</p>
                 </div>
               </div>
 
-              <nav className="space-y-1.5">
-                <SidebarLink to="/" icon={<LayoutDashboard size={22} />} label="ภาพรวมระบบ" onClick={() => setIsSidebarOpen(false)} />
-                <SidebarLink to="/inventory" icon={<TableProperties size={22} />} label="จัดการฐานข้อมูล" onClick={() => setIsSidebarOpen(false)} />
-                <SidebarLink to="/inspections" icon={<ShieldCheck size={22} />} label="บันทึกการตรวจสอบ" onClick={() => setIsSidebarOpen(false)} />
-                <SidebarLink to="/history" icon={<History size={22} />} label="ประวัติและรายงาน" onClick={() => setIsSidebarOpen(false)} />
+              <nav className="space-y-1">
+                <SidebarLink to="/" icon={<LayoutDashboard size={20} />} label="ภาพรวมระบบ" onClick={() => setIsSidebarOpen(false)} />
+                <SidebarLink to="/inventory" icon={<TableProperties size={20} />} label="จัดการข้อมูลถัง" onClick={() => setIsSidebarOpen(false)} />
+                <SidebarLink to="/inspections" icon={<ShieldCheck size={20} />} label="บันทึกการตรวจ" onClick={() => setIsSidebarOpen(false)} />
+                <SidebarLink to="/history" icon={<History size={20} />} label="ประวัติรายงาน" onClick={() => setIsSidebarOpen(false)} />
               </nav>
             </div>
 
-            <div className="mt-auto p-8 border-t border-slate-800/50">
-              <div className="flex items-center gap-3 p-4 bg-slate-800/40 rounded-2xl border border-slate-700/50">
-                <div className="w-10 h-10 rounded-full bg-[#1B7F43] flex items-center justify-center font-bold text-sm">FC</div>
-                <div>
-                  <p className="text-xs font-bold">Main System</p>
-                  <p className="text-[10px] text-slate-500">v2.1.0 Online</p>
+            <div className="mt-auto p-8 border-t border-slate-100">
+              <div className="flex items-center gap-3 p-4 bg-slate-50 rounded-2xl border border-slate-100">
+                <div className="w-10 h-10 rounded-full bg-slate-200 flex items-center justify-center font-bold text-slate-600 text-sm">AD</div>
+                <div className="min-w-0">
+                  <p className="text-xs font-bold text-slate-900 truncate">Administrator</p>
+                  <p className="text-[10px] text-slate-400 uppercase font-black">Online</p>
                 </div>
               </div>
             </div>
@@ -114,36 +110,30 @@ const App: React.FC = () => {
 
         {/* Main Content */}
         <main className="flex-1 flex flex-col min-w-0 overflow-hidden">
-          <header className="h-20 bg-white/80 backdrop-blur-md border-b flex items-center justify-between px-8 shrink-0 sticky top-0 z-30">
+          <header className="h-20 bg-white/70 backdrop-blur-md border-b border-slate-100 flex items-center justify-between px-8 shrink-0 sticky top-0 z-30">
             <div className="flex items-center gap-4">
               <button className="lg:hidden p-2 hover:bg-slate-100 rounded-xl transition-colors" onClick={() => setIsSidebarOpen(true)}>
                 <Menu size={24} className="text-slate-600" />
               </button>
-              <h2 className="text-slate-800 font-bold hidden md:block uppercase text-xs tracking-[0.2em]">Fire Extinguisher Management</h2>
+              <div className="hidden md:flex items-center gap-2 bg-slate-100 px-4 py-2 rounded-2xl border border-slate-200">
+                <Search size={16} className="text-slate-400" />
+                <input type="text" placeholder="ค้นหาข้อมูล..." className="bg-transparent border-none focus:outline-none text-xs w-48" />
+              </div>
             </div>
             
-            <div className="flex items-center gap-6">
-              <div className="flex items-center gap-3">
-                <div className="text-right hidden sm:block">
-                  <p className="text-sm font-bold text-slate-900">Operator</p>
-                  <p className="text-[10px] text-[#1B7F43] font-bold uppercase tracking-widest">Authorized</p>
-                </div>
-                <div className="w-10 h-10 rounded-2xl bg-slate-50 border border-slate-200 p-1 shadow-sm">
-                  <img 
-                    src="./logo.jpg" 
-                    alt="User" 
-                    className="w-full h-full object-cover rounded-xl"
-                    onError={(e) => {
-                      (e.target as HTMLImageElement).src = 'https://ui-avatars.com/api/?name=OP&background=f1f5f9&color=64748b';
-                    }}
-                  />
-                </div>
-              </div>
+            <div className="flex items-center gap-4">
+              <button className="p-2.5 hover:bg-slate-100 rounded-2xl transition-colors relative">
+                <Bell size={20} className="text-slate-600" />
+                <span className="absolute top-2 right-2 w-2 h-2 bg-red-500 rounded-full border-2 border-white"></span>
+              </button>
+              <button className="p-2.5 hover:bg-slate-100 rounded-2xl transition-colors">
+                <Settings size={20} className="text-slate-600" />
+              </button>
             </div>
           </header>
 
-          <div className="flex-1 overflow-y-auto custom-scrollbar">
-            <div className="max-w-[1600px] mx-auto p-6 md:p-10">
+          <div className="flex-1 overflow-y-auto custom-scrollbar p-6 md:p-10">
+            <div className="max-w-7xl mx-auto animate-in fade-in slide-in-from-bottom-4 duration-700">
               <Routes>
                 <Route path="/" element={<Dashboard state={state} />} />
                 <Route path="/inventory" element={<ExtinguisherList extinguishers={state.extinguishers} onUpdate={updateExtinguishers} />} />
@@ -169,14 +159,14 @@ const SidebarLink: React.FC<{ to: string; icon: React.ReactNode; label: string; 
       className={`
         flex items-center gap-4 px-5 py-4 rounded-2xl transition-all duration-200 group
         ${isActive 
-          ? 'bg-[#1B7F43] text-white shadow-xl shadow-green-900/40 translate-x-1' 
-          : 'text-slate-400 hover:bg-white/5 hover:text-white hover:translate-x-1'}
+          ? 'bg-[#1B7F43] text-white shadow-lg shadow-green-900/20 translate-x-1' 
+          : 'text-slate-500 hover:bg-slate-50 hover:text-[#1B7F43] hover:translate-x-1'}
       `}
     >
-      <span className={`${isActive ? 'text-white' : 'text-slate-500 group-hover:text-white'} transition-colors`}>
+      <span className={`${isActive ? 'text-white' : 'text-slate-400 group-hover:text-[#1B7F43]'} transition-colors`}>
         {icon}
       </span>
-      <span className="font-semibold text-sm tracking-wide">{label}</span>
+      <span className="font-bold text-sm tracking-tight">{label}</span>
     </Link>
   );
 };

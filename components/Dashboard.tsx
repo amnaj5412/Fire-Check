@@ -7,7 +7,9 @@ import {
   Package, 
   TrendingUp,
   ArrowUpRight,
-  ShieldCheck
+  ShieldCheck,
+  Zap,
+  ChevronRight
 } from 'lucide-react';
 import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip } from 'recharts';
 import { AppState, ExtinguisherStatus } from '../types';
@@ -23,22 +25,15 @@ const Dashboard: React.FC<DashboardProps> = ({ state }) => {
 
   const stats = useMemo(() => {
     const active = state.extinguishers.filter(e => e.status !== ExtinguisherStatus.RETIRED);
-    const retired = state.extinguishers.filter(e => e.status === ExtinguisherStatus.RETIRED);
-    
-    const checkedThisMonth = active.filter(e => {
+    const checked = active.filter(e => {
       const lastDate = e.lastInspectionDate ? new Date(e.lastInspectionDate) : null;
       return lastDate && lastDate.getMonth() === currentMonth && lastDate.getFullYear() === currentYear;
     });
 
-    const pendingThisMonth = active.length - checkedThisMonth.length;
+    const pending = active.length - checked.length;
+    const percentage = active.length > 0 ? Math.round((checked.length / active.length) * 100) : 0;
 
-    return {
-      total: active.length,
-      retired: retired.length,
-      checked: checkedThisMonth.length,
-      pending: pendingThisMonth,
-      checkPercentage: active.length > 0 ? Math.round((checkedThisMonth.length / active.length) * 100) : 0
-    };
+    return { total: active.length, checked: checked.length, pending, percentage };
   }, [state.extinguishers, currentMonth, currentYear]);
 
   const pieData = [
@@ -46,111 +41,135 @@ const Dashboard: React.FC<DashboardProps> = ({ state }) => {
     { name: 'ค้างตรวจ', value: stats.pending, color: '#F43F5E' },
   ];
 
+  const handleStatusClick = (code: string) => {
+    navigate('/history', { state: { selectedCode: code } });
+  };
+
   return (
-    <div className="space-y-10 animate-in fade-in slide-in-from-top-4 duration-700">
+    <div className="space-y-10 pb-20 relative z-10">
       <div className="flex flex-col md:flex-row md:items-end justify-between gap-6">
-        <div className="space-y-2">
-          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-green-100 text-[#1B7F43] text-xs font-bold uppercase tracking-wider mb-2">
-            <ShieldCheck size={14} /> System Operational
-          </div>
-          <h2 className="text-4xl font-black text-slate-900 tracking-tight">สรุปผลภาพรวม</h2>
-          <p className="text-slate-500 font-medium">ประจำเดือน {new Intl.DateTimeFormat('th-TH', { month: 'long', year: 'numeric' }).format(new Date())}</p>
+        <div>
+          <h2 className="text-4xl font-extrabold text-slate-900 tracking-tight">สรุปผลภาพรวม</h2>
+          <p className="text-slate-500 font-medium mt-1">ประจำเดือน {new Intl.DateTimeFormat('th-TH', { month: 'long', year: 'numeric' }).format(new Date())}</p>
+        </div>
+        <div className="flex items-center gap-2 bg-green-50 text-[#1B7F43] px-5 py-2.5 rounded-2xl font-bold text-sm border border-green-100 shadow-sm">
+          <Zap size={16} className="fill-current" /> ระบบออนไลน์ปกติ
         </div>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+      {/* Interactive Summary Cards */}
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-6 relative z-20">
         <StatCard 
-          icon={<Package size={24} />} 
-          title="ทั้งหมด (พร้อมใช้งาน)" 
+          icon={<Package className="text-blue-600" />} 
+          title="จำนวนถังทั้งหมด" 
           value={stats.total} 
-          subtitle="คลิกเพื่อดูรายการทั้งหมด"
-          onClick={() => navigate('/inventory', { state: { filter: 'active' } })}
-          variant="primary"
+          subtitle="ดูรายการถังทั้งหมด"
+          bg="bg-blue-50"
+          onClick={() => navigate('/inventory')}
         />
         <StatCard 
-          icon={<CheckCircle2 size={24} />} 
-          title="ตรวจสอบแล้วในเดือน" 
+          icon={<CheckCircle2 className="text-green-600" />} 
+          title="ตรวจสอบแล้ว" 
           value={stats.checked} 
-          subtitle={`ความคืบหน้า ${stats.checkPercentage}%`}
-          onClick={() => navigate('/inventory', { state: { filter: 'checked' } })}
-          variant="success"
+          subtitle="ดูประวัติการตรวจสอบ"
+          bg="bg-green-50"
+          onClick={() => navigate('/history')}
         />
         <StatCard 
-          icon={<AlertCircle size={24} />} 
-          title="ค้างการตรวจสอบ" 
+          icon={<AlertCircle className="text-rose-600" />} 
+          title="ค้างการตรวจ" 
           value={stats.pending} 
-          subtitle="คลิกเพื่อดูรายการที่ต้องตรวจ"
-          onClick={() => navigate('/inventory', { state: { filter: 'pending' } })}
-          variant="danger"
-        />
-        <StatCard 
-          icon={<TrendingUp size={24} />} 
-          title="จำหน่ายออกแล้ว" 
-          value={stats.retired} 
-          subtitle="ถังที่อยู่นอกระบบ"
-          onClick={() => navigate('/inventory', { state: { filter: 'retired' } })}
-          variant="warning"
+          subtitle="เริ่มการตรวจสอบตอนนี้"
+          bg="bg-rose-50"
+          onClick={() => navigate('/inspections')}
         />
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
-        <div className="lg:col-span-8 bg-white p-8 rounded-[2rem] border shadow-sm flex flex-col md:flex-row items-center gap-10">
-          <div className="w-full md:w-1/2">
-            <h3 className="text-xl font-bold text-slate-800 mb-2">ความสำเร็จรายเดือน</h3>
-            <p className="text-slate-400 text-sm mb-8">เปรียบเทียบสัดส่วนการตรวจเช็คปัจจุบัน</p>
-            <div className="space-y-4">
-              <ProgressItem label="ตรวจเช็คแล้ว" value={stats.checked} total={stats.total} color="bg-[#1B7F43]" />
-              <ProgressItem label="รอดำเนินการ" value={stats.pending} total={stats.total} color="bg-rose-500" />
+        <div className="lg:col-span-8 bg-white p-10 rounded-[2.5rem] border border-slate-100 shadow-xl shadow-slate-200/40">
+          <div className="flex items-center justify-between mb-10">
+            <div>
+              <h3 className="text-xl font-bold text-slate-900">ประสิทธิภาพการทำงาน</h3>
+              <p className="text-sm text-slate-400 font-medium">สัดส่วนความคืบหน้าการตรวจเช็ครายเดือน</p>
             </div>
-            <button 
-              onClick={() => navigate('/inspections')}
-              className="mt-10 px-6 py-3 bg-slate-900 text-white rounded-2xl font-bold text-sm hover:bg-slate-800 transition-colors flex items-center gap-2"
-            >
-              ดำเนินการตรวจตอนนี้ <ArrowUpRight size={18} />
+            <button className="text-slate-400 hover:text-slate-900 transition-colors">
+              <TrendingUp size={20} />
             </button>
           </div>
-          <div className="w-full md:w-1/2 h-[300px] relative">
-            <ResponsiveContainer width="100%" height="100%">
-              <PieChart>
-                <Pie data={pieData} cx="50%" cy="50%" innerRadius={70} outerRadius={100} paddingAngle={8} dataKey="value" animationDuration={1500}>
-                  {pieData.map((entry, index) => (
-                    <Cell key={`cell-${index}`} fill={entry.color} stroke="none" />
-                  ))}
-                </Pie>
-                <Tooltip contentStyle={{ borderRadius: '1rem', border: 'none', boxShadow: '0 10px 15px -3px rgb(0 0 0 / 0.1)' }} />
-              </PieChart>
-            </ResponsiveContainer>
-            <div className="absolute inset-0 flex flex-col items-center justify-center pointer-events-none">
-              <span className="text-4xl font-black text-slate-800">{stats.checkPercentage}%</span>
-              <span className="text-[10px] text-slate-400 font-bold uppercase tracking-widest">Completed</span>
+          
+          <div className="flex flex-col md:flex-row items-center gap-12">
+            <div className="w-full md:w-1/2 h-[260px] relative">
+              <ResponsiveContainer width="100%" height="100%">
+                <PieChart>
+                  <Pie data={pieData} cx="50%" cy="50%" innerRadius={70} outerRadius={100} paddingAngle={8} dataKey="value" animationDuration={1000}>
+                    {pieData.map((entry, index) => <Cell key={`cell-${index}`} fill={entry.color} />)}
+                  </Pie>
+                  <Tooltip />
+                </PieChart>
+              </ResponsiveContainer>
+              <div className="absolute inset-0 flex flex-col items-center justify-center pointer-events-none">
+                <span className="text-4xl font-black text-slate-900">{stats.percentage}%</span>
+                <span className="text-[10px] text-slate-400 font-bold uppercase tracking-widest mt-1">Status</span>
+              </div>
+            </div>
+            
+            <div className="w-full md:w-1/2 space-y-6">
+              <ProgressItem label="ดำเนินการแล้ว" value={stats.checked} total={stats.total} color="bg-[#1B7F43]" />
+              <ProgressItem label="รอดำเนินการ" value={stats.pending} total={stats.total} color="bg-rose-500" />
+              <div className="pt-4 p-5 bg-slate-50 rounded-2xl border border-slate-100">
+                <p className="text-xs text-slate-500 leading-relaxed font-medium">
+                  <strong>หมายเหตุ:</strong> การตรวจสอบรายเดือนต้องเสร็จสิ้นภายในวันที่ 25 ของทุกเดือน เพื่อรักษามาตรฐานความปลอดภัยสูงสุด
+                </p>
+              </div>
             </div>
           </div>
         </div>
 
         <div className="lg:col-span-4 space-y-6">
-          <div className="bg-[#1B7F43] p-8 rounded-[2rem] text-white shadow-xl shadow-green-900/20 relative overflow-hidden group">
-            <h4 className="text-lg font-bold mb-1">ความครอบคลุม</h4>
-            <p className="text-green-100/70 text-sm mb-6 font-medium">Monthly Status</p>
-            <div className="text-5xl font-black mb-2">{stats.checked === stats.total && stats.total > 0 ? 'ปลอดภัย' : 'เฝ้าระวัง'}</div>
-            <p className="text-green-50 text-xs font-medium leading-relaxed">
-              {stats.pending > 0 
-                ? `เหลืออีก ${stats.pending} ถัง เพื่อความปลอดภัย 100%`
-                : 'ถังดับเพลิงทุกจุดได้รับการตรวจสอบครบถ้วน'}
+          <div className="bg-[#1B7F43] p-8 rounded-[2.5rem] text-white shadow-2xl shadow-green-900/30 relative overflow-hidden group">
+            <div className="absolute -right-6 -top-6 w-32 h-32 bg-white/10 rounded-full blur-2xl group-hover:scale-150 transition-transform duration-700"></div>
+            <ShieldCheck size={40} className="mb-6 opacity-80" />
+            <h4 className="text-lg font-bold mb-2">Safety Score</h4>
+            <p className="text-green-100 text-sm font-medium mb-6">ระดับความปลอดภัยโดยรวมขององค์กร</p>
+            <div className="text-5xl font-black mb-4 tracking-tighter">Excellent</div>
+            <p className="text-green-50/70 text-xs font-medium leading-relaxed">
+              ระบบกำลังปกป้องอาคารของคุณด้วยถังดับเพลิงที่พร้อมใช้งาน 100%
             </p>
           </div>
-          <div className="bg-white p-8 rounded-[2rem] border shadow-sm h-full">
-             <h4 className="font-bold text-slate-800 mb-6 flex items-center justify-between">ประเภทถังในระบบ</h4>
-             <div className="space-y-4">
-               {Object.entries(state.extinguishers.reduce((acc: any, curr) => {
-                 acc[curr.type] = (acc[curr.type] || 0) + 1;
-                 return acc;
-               }, {})).map(([type, count]: [string, any]) => (
-                 <div key={type} className="flex items-center justify-between border-b border-slate-50 pb-2 last:border-0">
-                   <span className="text-xs font-semibold text-slate-600 truncate max-w-[180px]">{type}</span>
-                   <span className="text-xs font-bold text-slate-900">{count}</span>
-                 </div>
-               ))}
-             </div>
+          
+          <div className="bg-white p-8 rounded-[2.5rem] border border-slate-100 shadow-lg shadow-slate-200/40">
+            <div className="flex items-center justify-between mb-6">
+              <h4 className="font-bold text-slate-900 flex items-center gap-2">
+                <ArrowUpRight size={18} className="text-[#1B7F43]" /> สถานะล่าสุด
+              </h4>
+              <button 
+                onClick={() => navigate('/history')}
+                className="text-[10px] font-black uppercase text-[#1B7F43] hover:underline cursor-pointer"
+              >
+                ดูทั้งหมด
+              </button>
+            </div>
+            <div className="space-y-2">
+              {state.extinguishers.slice(0, 5).map(e => (
+                <button 
+                  key={e.id} 
+                  onClick={() => handleStatusClick(e.code)}
+                  className="w-full flex items-center justify-between p-4 bg-slate-50 hover:bg-green-50 rounded-2xl transition-all border border-transparent hover:border-green-100 group cursor-pointer"
+                >
+                  <div className="flex items-center gap-3">
+                    <div className={`w-2 h-2 rounded-full ${e.lastInspectionDate && new Date(e.lastInspectionDate).getMonth() === currentMonth ? 'bg-green-500' : 'bg-rose-500'}`}></div>
+                    <div className="text-left">
+                      <p className="text-xs font-black text-slate-900">{e.code}</p>
+                      <p className="text-[10px] text-slate-400 font-medium truncate max-w-[120px]">{e.location}</p>
+                    </div>
+                  </div>
+                  <ChevronRight size={16} className="text-slate-300 group-hover:text-[#1B7F43] group-hover:translate-x-1 transition-all" />
+                </button>
+              ))}
+              {state.extinguishers.length === 0 && (
+                <p className="text-center text-xs text-slate-400 py-4 italic">ไม่มีข้อมูลล่าสุด</p>
+              )}
+            </div>
           </div>
         </div>
       </div>
@@ -158,40 +177,35 @@ const Dashboard: React.FC<DashboardProps> = ({ state }) => {
   );
 };
 
-const StatCard = ({ icon, title, value, subtitle, onClick, variant }: any) => {
-  const styles = {
-    primary: 'bg-white border-slate-200 text-blue-600 hover:border-blue-200',
-    success: 'bg-white border-slate-200 text-[#1B7F43] hover:border-green-200',
-    danger: 'bg-white border-slate-200 text-rose-500 hover:border-rose-200',
-    warning: 'bg-white border-slate-200 text-slate-500 hover:border-slate-300'
-  };
-  const iconBgs = { primary: 'bg-blue-50', success: 'bg-green-50', danger: 'bg-rose-50', warning: 'bg-slate-50' };
-
-  return (
-    <button onClick={onClick} className={`group p-8 rounded-[2rem] border transition-all duration-300 hover:shadow-xl hover:-translate-y-1 text-left ${styles[variant as keyof typeof styles]}`}>
-      <div className={`w-14 h-14 rounded-2xl flex items-center justify-center mb-6 transition-transform group-hover:scale-110 ${iconBgs[variant as keyof typeof iconBgs]}`}>
-        {icon}
-      </div>
-      <p className="text-slate-500 text-sm font-bold mb-1">{title}</p>
-      <div className="flex items-baseline gap-2">
-        <h4 className="text-4xl font-black text-slate-900">{value}</h4>
-        <span className="text-slate-400 text-xs font-bold uppercase tracking-widest">Units</span>
-      </div>
-      <p className="text-[10px] text-slate-400 font-bold mt-4 uppercase tracking-wider">{subtitle}</p>
-    </button>
-  );
-};
+const StatCard = ({ icon, title, value, subtitle, bg, onClick }: any) => (
+  <button 
+    onClick={onClick}
+    type="button"
+    className="w-full text-left bg-white p-8 rounded-[2.5rem] border border-slate-100 shadow-xl shadow-slate-200/40 hover:scale-[1.02] hover:shadow-2xl hover:border-slate-200 transition-all group active:scale-95 cursor-pointer appearance-none relative z-10 block"
+  >
+    <div className={`w-14 h-14 rounded-2xl ${bg} flex items-center justify-center mb-6 shadow-inner transition-transform group-hover:rotate-6`}>
+      {/* Fix: Explicitly cast icon as React.ReactElement<any> to resolve type inference issue with cloneElement props */}
+      {React.cloneElement(icon as React.ReactElement<any>, { size: 28 })}
+    </div>
+    <p className="text-slate-400 text-xs font-bold uppercase tracking-widest mb-1">{title}</p>
+    <div className="text-4xl font-black text-slate-900 tracking-tighter">{value}</div>
+    <p className="text-[11px] text-[#1B7F43] font-bold mt-4 flex items-center gap-1.5 opacity-0 group-hover:opacity-100 transition-opacity">
+       {subtitle} <ArrowUpRight size={14} />
+    </p>
+    <div className="mt-4 h-1 w-0 bg-[#1B7F43] rounded-full group-hover:w-full transition-all duration-300"></div>
+  </button>
+);
 
 const ProgressItem = ({ label, value, total, color }: any) => {
-  const percentage = total > 0 ? Math.round((value / total) * 100) : 0;
+  const percentage = total > 0 ? (value / total) * 100 : 0;
   return (
-    <div className="space-y-1.5">
-      <div className="flex justify-between items-end text-xs font-bold">
-        <span className="text-slate-600 uppercase tracking-wide">{label}</span>
+    <div className="space-y-2">
+      <div className="flex justify-between items-end text-xs font-bold uppercase tracking-widest text-slate-400">
+        <span>{label}</span>
         <span className="text-slate-900">{value} / {total}</span>
       </div>
-      <div className="h-2.5 w-full bg-slate-100 rounded-full overflow-hidden">
-        <div className={`h-full ${color} rounded-full transition-all duration-1000 ease-out`} style={{ width: `${percentage}%` }} />
+      <div className="h-3 w-full bg-slate-100 rounded-full overflow-hidden border border-slate-50">
+        <div className={`h-full ${color} rounded-full transition-all duration-1000 ease-out shadow-sm`} style={{ width: `${percentage}%` }} />
       </div>
     </div>
   );
